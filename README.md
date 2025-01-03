@@ -15,22 +15,22 @@ The agent is given intermediate rewards that are related to the task's ultimate 
 
 ## Files in the Repository
 
-### 1. speeds.csv
+### 1. `speeds.csv`
 This csv file contains speed data used for reward calculation.
 
-### 2. speedlimit.py
+### 2. `speedlimit.py`
 This script defines the reward shaping strategy and visualizes the rewards overtime using graphs as an output.
 
 #### Key functions:
-**`calculateReward(speed)**: Calculates the incremental and cumulative reward based on the speed data in the speeds.csv file.  
+`**calculateReward(speed)**`: Calculates the incremental and cumulative reward based on the speed data in the speeds.csv file.  
 **Visualization**: Plots both incremental and cumulative rewards over time.
 
-### 3. speedsandterrain.csv
+### 3. `speedsandterrain.csv`
 This csv file contains both speed and terrain data used for reward calculation.
 
-### 4. speedandterrain.py
+### 4. `speedandterrain.py`
 This script builds onto speedlimit.py and incorporates terrain data as a part of the reward shaping strategy. It also visualizes the rewards using graphs as an output.
 
 #### Key functions:
-**`calculateReward(speed, terrain)**: Calculates the incremental and cumulative reward based on speed and terrain data in the speedsandterrain.csv file.  
+`**calculateReward(speed, terrain)**`: Calculates the incremental and cumulative reward based on speed and terrain data in the speedsandterrain.csv file.  
 **Visualization**: Plots both incremental and cumulative rewards over time.

@@ -25,6 +25,13 @@ Reach out to one of the developers if you have any questions.
 
 ## Relevant Code
 
+### Examine the game in interactive mode
+1. In `mario-kart/stable-retro`, run `./gym-retro-integration`
+2. In the Game drop-down menu, click **Load Game** navigate to your `SuperMarioKart-UMD` folder and select `rom.sha `.
+3. You can start the game from the beginning loading screen, or you can load in the game at a specified start location (after the loading screen). This is known as a **state**. To do the latter, in the Game drop-down menu, click **Load State** and navigate to the state you'd like to open within the `SuperMarioKart-UMD` folder. If not otherwise stated, we have named it `beginner.state`.
+4. The old reward structure was able to be edited within this GUI. You can edit it by opening the Data drop-down menu and clicking **Load Scenario**. However, we switched to scripting the reward structure and you can edit it outside of the GUI. (I recommend using VS Code or another similar code editor to edit the reward file directly. It is called `script.lua`.)
+5. You can examine the various variables with the right-hand menu. It may also be useful to observe when the scenario is 'Done' for the ending condition. 
+
 ### Train the agent
 1. Ensure that your reward structure in `mario-kart/stable-retro/retro/data/stable/SuperMarioKart-UMD/script.lua` is appropirate for the scenario you are trying to run.
 2. Ensure that you have the right parameters set up for your model to start training in `mario-kart/stable-retro-scripts/models.py`.

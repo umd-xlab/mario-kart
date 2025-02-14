@@ -1,0 +1,4 @@
+1. Take the data we want to inspect and put it in: C:\readtensorfiles - we do this because tensorflow doesn't like spaces in the file path
+2. Open CMD. Go to the c-drive
+3. Run python3 -m tensorboard.main --logdir C:\readtensorfiles
+4. Then open http://localhost:6006/ in chrome. 

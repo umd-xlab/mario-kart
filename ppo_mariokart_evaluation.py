@@ -2,6 +2,7 @@
 Evaluate an agent using Proximal Policy Optimization from Stable Baselines 3
 """
 
+import os
 import argparse
 import csv
 import gymnasium as gym
@@ -76,12 +77,21 @@ def wrap_deepmind_retro(env):
     env = WarpFrame(env)
     env = ClipRewardEnv(env)
     return env
+
+def parse_inputs(args):
+
+    base_dir = "/mario-kart/OUTPUT/SuperMarioKart-UMD-2025-"
+    filename = f"/SuperMarioKart-UMD-ppo2-CnnPolicy-{args.steps}"
+    path_loc = os.path.expanduser("~") + base_dir + args.date 
+    return path_loc, filename
    
 def main():
-    parser = argparse.ArgumentParser()
+    parser = argparse.ArgumentParser(description="Process a data file from a given date and step count.")
     parser.add_argument("--game", default="SuperMarioKart-UMD")
     parser.add_argument("--state", default=retro.State.DEFAULT)
     parser.add_argument("--scenario", default=None)
+    parser.add_argument("--date", type=str, help="The date in format MM-DD_HH-MM-SS")
+    parser.add_argument("--steps", type=int, help="The number of steps in training")
     args = parser.parse_args()
 
     def make_env():
@@ -90,7 +100,9 @@ def main():
         return env
 
     venv = VecTransposeImage(VecFrameStack(SubprocVecEnv([make_env] * 8), n_stack=4))
-    model = PPO.load("/home/kvsakano/OUTPUT/SuperMarioKart-UMD-2025-02-06_17-38-30/SuperMarioKart-UMD-ppo2-CnnPolicy-40000")
+
+    path_loc, filename = parse_inputs(args)
+    model = PPO.load(path_loc + filename)
 
     obs = venv.reset()
     done = False
@@ -101,7 +113,8 @@ def main():
     headers = ["step", "x_position", "y_position", "direction", "speed", "drivingMode", "gameMode",
         "frame", "current_checkpoint", "surface", "reward", "total_reward"]
     
-    with open("mario_kart_data.csv", 'w', newline='') as csvfile:
+    output_file = path_loc + "/postprocessed_data.csv"
+    with open(output_file, 'w', newline='') as csvfile:
         writer = csv.writer(csvfile)
         writer.writerow(headers)
 

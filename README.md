@@ -23,6 +23,21 @@ This folder has submodules pointing to three different Githubs.
 
 Reach out to one of the developers if you have any questions.
 
+### Training Evaluation with Tensorboard
+
+We're using Tensorboard to evaluate the training post-hoc. With a given training .tfevents data set, you can check the cumulative rewards / episode to ensure convergence. To install and run...
+1. Install tensorflow (contains tensorboard) if not already done
+'''
+pip install tensorflow
+2. Put the .tfevents file in an accessible folder with NO spaces in the file path
+3. Open your python (or cmd) terminal and run
+'''
+tensorboard.main --logdir
+'''
+4. Then open http://localhost:6006/ (or whatever localhost is recommended by tensorboard) in your browser. This should be the board to inspect data!
+
+
+
 ## Relevant Code
 
 ### Examine the game in interactive mode

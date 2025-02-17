@@ -1,5 +1,9 @@
 """
 Evaluate an agent using Proximal Policy Optimization from Stable Baselines 3
+
+Requires Stable-Retro & a pre-generated model.
+
+Secondary Objective: copy over the lua.script to the output folder designated in the arg command.
 """
 
 import os
@@ -17,6 +21,8 @@ from stable_baselines3.common.vec_env import (
 )
 
 import retro
+import shutil # necessary for copying over the script.lua into the argparse output folder
+
 
 
 class StochasticFrameSkip(gym.Wrapper):
@@ -79,12 +85,22 @@ def wrap_deepmind_retro(env):
     return env
 
 def parse_inputs(args):
-
+    """
+    Loads in the correct inputs based on the arguments the arg_parse passes through.
+    """
     base_dir = "/mario-kart/OUTPUT/SuperMarioKart-UMD-2025-"
     filename = f"/SuperMarioKart-UMD-ppo2-CnnPolicy-{args.steps}"
     path_loc = os.path.expanduser("~") + base_dir + args.date 
     return path_loc, filename
-   
+
+def copy_rewardscript(path_loc):
+    """
+    Copies over the current reward script into the post-processed folder! Yay, automation!
+    """
+    reward_script_path = os.path.expanduser("~") + "/mario-kart/stable-retro/retro/data/stable/SuperMarioKart-UMD/script.lua"
+    shutil.copy(reward_script_path, path_loc)
+    return
+
 def main():
     parser = argparse.ArgumentParser(description="Process a data file from a given date and step count.")
     parser.add_argument("--game", default="SuperMarioKart-UMD")
@@ -102,6 +118,7 @@ def main():
     venv = VecTransposeImage(VecFrameStack(SubprocVecEnv([make_env] * 8), n_stack=4))
 
     path_loc, filename = parse_inputs(args)
+    copy_rewardscript(path_loc)
     model = PPO.load(path_loc + filename)
 
     obs = venv.reset()

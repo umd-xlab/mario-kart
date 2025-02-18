@@ -1,6 +1,3 @@
-[submodule "stable-retro"]
-	path = stable-retro
-	url = https://github.com/Farama-Foundation/stable-retro.git
 [submodule "stable-retro-scripts"]
 	path = stable-retro-scripts
 	url = https://github.com/MatPoliquin/stable-retro-scripts.git

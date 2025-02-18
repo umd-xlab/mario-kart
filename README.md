@@ -48,7 +48,7 @@ We're using Tensorboard to evaluate the training post-hoc. With a given training
 
 ### Test the agent & generate traces
 1. Ensure that the model was trained sufficiently. You should see a new folder created called `mario-kart/OUTPUT` created after training the agent. Within it, you should have a new sub-folder titled `SuperMarioKart-UMD-[DATE]` and within it, a `.zip` file indicates that the model was trained successfully.
-2. Run the `mario-kart/ppo_mariokart_evaluation.py` file. Make sure to change the input file to the model you are trying to generate a trace for.
+2. Run the `mario-kart/ppo_mariokart_evaluation.py` file with this command `python3 ppo_mariokart_evaluataion.py --date=[MM-DD_HH-MM-SS] --steps=[STEPS]`. Please fill in the boxes and remove the brackets with the appropirate date and number of steps.
 3. Don't forget to copy your reward structure into the `mario-kart/OUTPUT/SuperMarioKart-UMD-[DATE]` folder.
 4. Git add, commit, and push to Github with commentary, if applicable.
 

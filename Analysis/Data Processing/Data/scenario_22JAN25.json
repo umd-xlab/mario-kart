@@ -1,0 +1,35 @@
+{
+  "crop": [
+    0,
+    0,
+    0,
+    0
+  ],
+  "done": {
+    "variables": {
+      "current_checkpoint": {
+        "op": "equal",
+        "reference": 3
+      }
+    }
+  },
+  "reward": {
+    "variables": {
+      "current_checkpoint": {
+        "op": "positive",
+        "reward": 1.0
+      },
+      "kart1_speed": {
+        "measurement": "absolute",
+        "op": "positive",
+        "reward": 0.10000000149011612
+      },
+      "surface": {
+        "measurement": "absolute",
+        "op": "equal",
+        "reference": 64,
+        "reward": 0.10000000149011612
+      }
+    }
+  }
+}

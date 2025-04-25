@@ -26,8 +26,8 @@ T = array2table([time, phi_dot, v],...
     "VariableNames", names);
 
 % Save off data as a csv
-writetable(T,".\LM_Data\TeLExData.csv")
+writetable(T,".\TeLEx_DATA\TeLExData.csv")
 
-fprintf('\nData successfully exported!')
+fprintf('\nData successfully exported to TeLEx_DATA subfolder!')
 
 end

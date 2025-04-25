@@ -7,7 +7,7 @@ import pandas as pd
 # NOTE: need to add col headers to converter dict! 
 # This tells it that we're passing a list to the pd dataframe and not a string
 # The csv file MUST be in the Data folder!
-df = pd.read_csv('.\Data\mario_kart_data_10APR25_trial2.csv', converters={'x_position': eval, 
+df = pd.read_csv('.\Analysis\Data Processing\Data\mario_kart_data_10APR25_trial2.csv', converters={'x_position': eval, 
                                                     'y_position': eval,
                                                     'current_checkpoint': eval,
                                                     'surface': eval,
@@ -67,7 +67,7 @@ for j in range(Na):
     print(agent_j)
     
     # get the j'th name
-    csv_name = 'parsed_agent_data\mario_kart_data_agent' + str(j+1) + '.csv'
+    csv_name = '.\Analysis\Data Processing\parsed_agent_data\mario_kart_data_agent' + str(j+1) + '.csv'
     agent_j.to_csv(csv_name)
 
 

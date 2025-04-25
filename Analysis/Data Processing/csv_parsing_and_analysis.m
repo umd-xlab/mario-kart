@@ -194,7 +194,7 @@ sgtitle('Speed and Acceleration Magnitudes')
 
 %% Calculate the cumulative reward
 [rwd_series, cum_rwd] = reward_calc(x_pos, y_pos, checkpoints, surfaces, ingame_speed, time_sec);
-fprintf('Cumulative reward: %4.2f', cum_rwd)
+fprintf('\nCumulative reward: %4.2f', cum_rwd)
 
 % Fig 5 - plotting the rwd series
 figure
@@ -207,7 +207,7 @@ end % end agent loop
 %% TeLEx Export Data
 % Header names - must be a vector of strings!
 header_names=["time","phidot","speed"];
-%export_telex(ts, phi_dot, speed, header_names)
+export_telex(ts, phi_dot, speed, header_names)
 
 
 %% Statement plotting

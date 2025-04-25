@@ -1,0 +1,2 @@
+DEBUG:root:
+To Synthesize STL Template: G[0.0,72.0](((phidot > 0.5) | (phidot < -0.5)) => (speed < a? 0.0;80.0 ))

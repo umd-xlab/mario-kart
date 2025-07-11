@@ -1,5 +1,5 @@
 """
-Train a Model on NHL 94
+Train a Model
 """
 
 import warnings
@@ -31,34 +31,6 @@ if torch.cuda.is_available():
 os.environ['TF_CPP_MIN_LOG_LEVEL'] = '2' #suppress warnings
 
 
-
-class TraceLogger:
-    def __init__(self, path, num_envs):
-        self.path = os.path.join(path, "training_trace.csv")
-        self.num_envs = num_envs
-        self.header_written = False
-
-    def write_step(self, step, infos, rewards):
-        with open(self.path, 'a', newline='') as f:
-            writer = csv.writer(f)
-            if not self.header_written:
-                headers = ['env_id', 'step', 'x', 'y', 'checkpoint', 'surface', 'reward']
-                writer.writerow(headers)
-                self.header_written = True
-            for env_id in range(self.num_envs):
-                info = infos[env_id]
-                row = [
-                    env_id,
-                    step,
-                    info.get("kart1_X", 0),
-                    info.get("kart1_Y", 0),
-                    info.get("current_checkpoint", -1),
-                    info.get("surface", -1),
-                    rewards[env_id],
-                ]
-                writer.writerow(row)
-
-
 def parse_cmdline(argv):
     parser = argparse.ArgumentParser()
 
@@ -76,7 +48,7 @@ def parse_cmdline(argv):
     parser.add_argument('--display_height', type=int, default='810')
     parser.add_argument('--alg_verbose', default=True, action='store_true')
     parser.add_argument('--info_verbose', default=True, action='store_true')
-    parser.add_argument('--play', default=False, action='store_true')
+    #parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--rf', type=str, default='')
     parser.add_argument('--deterministic', default=True, action='store_true')
     parser.add_argument('--hyperparams', type=str, default='../hyperparams/default.json')
@@ -130,51 +102,52 @@ class ModelTrainer:
         return self.model_savepath
 
     def play(self, args, continuous=True):
+        """
         com_print('========= Start Play Loop ==========')
 
-        trace_rows = []
-        headers = ['step', 'x', 'y', 'checkpoint', 'surface', 'reward']
+        # ----------- Save a rollout of Agent 1 with the model that was just trained --------
+        csv_path = self.model_savepath        
+        with open(csv_path, 'w', newline='') as csvfile:
+            writer = csv.writer(csvfile)
+            headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed",
+            "DrivingMode", "GameMode", "getFrame", "current_checkpoint",
+            "surface", "reward", "total_reward"]
+            writer.writerow(headers)
 
-        episode_num = 0
-        while True:
-            state = self.env.reset()
-            done = [False]
+            # Run simulation
+            total_reward = 0
             step = 0
-            trace_rows.clear()  # clear previous episode's trace
+            done = [False]
+            self.env.seed(SEED)
+            state = self.env.reset()
+            #actions = []
 
             while not done[0]:
-                self.env.render(mode='human')
+                self.env.render(mode='human')  
                 p1_actions = self.p1_model.predict(state, deterministic=args.deterministic)
-                state, reward, done, info = self.env.step(p1_actions[0])
-                # Collect trace data for this step
-                row = [
-                    step,
-                    info[0].get("kart1_X", 0),
-                    info[0].get("kart1_Y", 0),
-                    info[0].get("current_checkpoint", -1),
-                    info[0].get("surface", -1),
-                    reward[0],
-                ]
-                trace_rows.append(row)
+                #actions.append(p1_actions[0])
+                state, rewards, done, infos = self.env.step(p1_actions[0])
+                total_reward += rewards[0]
+
+                # Write trace data
+                info = infos[0] # Get only Agent 1 info
+                reward = rewards[0] # Get only Agent 1 info
+                data = [step,
+                            info.get("kart1_X", 0),
+                            info.get("kart1_Y", 0),
+                            info.get("kart1_direction", 0),
+                            info.get("kart1_speed", 0),
+                            info.get("DrivingMode", 0),
+                            info.get("GameMode", 0),
+                            info.get("getFrame", 0),
+                            info.get("current_checkpoint", 0),
+                            info.get("surface", 0),
+                            reward,
+                            total_reward
+                        ]
+                writer.writerow(data)
                 step += 1
-
-                if done[0] and episode_num==0:
-                    # Save trace to CSV for this episode
-                    out_dir = self.output_fullpath
-                    os.makedirs(out_dir, exist_ok=True)
-                    trace_file = os.path.join(out_dir, f"play_trace_ep{episode_num}.csv")
-                    with open(trace_file, 'w', newline='') as f:
-                        writer = csv.writer(f)
-                        writer.writerow(headers)
-                        writer.writerows(trace_rows)
-                    print(f"[INFO] Saved trace for episode {episode_num} to {trace_file}")
-
-                    episode_num += 1
-                    break  # End this episode
-
-            if not continuous:
-                break  # Only play one episode if not continuous
-
+        """
 
 def main(argv):
 
@@ -188,8 +161,8 @@ def main(argv):
 
     trainer.train()
 
-    if args.play:
-        trainer.play(args)
+    #if args.play:
+    #    trainer.play(args)
 
 
 if __name__ == '__main__':

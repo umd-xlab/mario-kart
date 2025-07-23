@@ -20,6 +20,8 @@ import random
 import numpy as np
 import torch
 
+import shutil # package for copying over the script.lua into the argparse output folder
+
 SEED = 0
 random.seed(SEED)
 np.random.seed(SEED)
@@ -100,6 +102,15 @@ class ModelTrainer:
         com_print('Model saved to:%s' % self.model_savepath)
 
         return self.model_savepath
+    
+    def copy_rewardscript(self):
+        """
+        Copies over the current reward script into the newly created model folder. Yay, automation!
+        """
+        reward_script_path = os.path.expanduser("~") + "/mario-kart/stable-retro/retro/data/stable/SuperMarioKart-UMD/script.lua"
+        print(self.output_fullpath, "bloooooop")
+        shutil.copy(reward_script_path, self.output_fullpath)
+        return
 
     def play(self, args, continuous=True):
         """
@@ -160,6 +171,8 @@ def main(argv):
     trainer = ModelTrainer(args, logger)
 
     trainer.train()
+
+    trainer.copy_rewardscript()
 
     #if args.play:
     #    trainer.play(args)

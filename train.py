@@ -50,7 +50,7 @@ def parse_cmdline(argv):
     parser.add_argument('--display_height', type=int, default='810')
     parser.add_argument('--alg_verbose', default=True, action='store_true')
     parser.add_argument('--info_verbose', default=True, action='store_true')
-    #parser.add_argument('--play', default=False, action='store_true')
+    parser.add_argument('--play', default=False, action='store_true')
     parser.add_argument('--rf', type=str, default='')
     parser.add_argument('--deterministic', default=True, action='store_true')
     parser.add_argument('--hyperparams', type=str, default='../hyperparams/default.json')
@@ -107,58 +107,36 @@ class ModelTrainer:
         """
         Copies over the current reward script into the newly created model folder. Yay, automation!
         """
-        reward_script_path = os.path.expanduser("~") + "/mario-kart/stable-retro/retro/data/stable/SuperMarioKart-UMD/script.lua"
+        reward_script_path = os.path.expanduser("~") + "/mario-kart/stable-retro/retro/data/stable/SuperMarioKart-Snes/script.lua"
         print(self.output_fullpath, "bloooooop")
         shutil.copy(reward_script_path, self.output_fullpath)
         return
 
     def play(self, args, continuous=True):
-        """
+        #if self.args.alg_verbose:
         com_print('========= Start Play Loop ==========')
 
-        # ----------- Save a rollout of Agent 1 with the model that was just trained --------
-        csv_path = self.model_savepath        
-        with open(csv_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed",
-            "DrivingMode", "GameMode", "getFrame", "current_checkpoint",
-            "surface", "reward", "total_reward"]
-            writer.writerow(headers)
+        # Special case of ES
+        if self.args.alg == 'es':
+            final_reward = self.p1_model.evaluate(render=True, num_episodes=5)
+            print(f"Final evaluation reward: {final_reward:.2f}")
+            return
 
-            # Run simulation
-            total_reward = 0
-            step = 0
-            done = [False]
-            self.env.seed(SEED)
-            state = self.env.reset()
-            #actions = []
+        state = self.env.reset()
+        while True:
+            self.env.render(mode='human')
 
-            while not done[0]:
-                self.env.render(mode='human')  
-                p1_actions = self.p1_model.predict(state, deterministic=args.deterministic)
-                #actions.append(p1_actions[0])
-                state, rewards, done, infos = self.env.step(p1_actions[0])
-                total_reward += rewards[0]
+            p1_actions = self.p1_model.predict(state, deterministic=False)#args.deterministic)
 
-                # Write trace data
-                info = infos[0] # Get only Agent 1 info
-                reward = rewards[0] # Get only Agent 1 info
-                data = [step,
-                            info.get("kart1_X", 0),
-                            info.get("kart1_Y", 0),
-                            info.get("kart1_direction", 0),
-                            info.get("kart1_speed", 0),
-                            info.get("DrivingMode", 0),
-                            info.get("GameMode", 0),
-                            info.get("getFrame", 0),
-                            info.get("current_checkpoint", 0),
-                            info.get("surface", 0),
-                            reward,
-                            total_reward
-                        ]
-                writer.writerow(data)
-                step += 1
-        """
+            state, reward, done, info = self.env.step(p1_actions[0])
+            time.sleep(0.01)
+            #print(reward)
+
+            if done[0]:
+                state = self.env.reset()
+
+            if not continuous and done is True:
+                return info
 
 def main(argv):
 
@@ -174,8 +152,8 @@ def main(argv):
 
     trainer.copy_rewardscript()
 
-    #if args.play:
-    #    trainer.play(args)
+    if args.play:
+        trainer.play(args)
 
 
 if __name__ == '__main__':

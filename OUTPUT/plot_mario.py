@@ -25,7 +25,7 @@ if not trace_files:
     print("No matching files found.")
     exit()
 
-colors = ['red', 'orange', 'yellow', 'green', 'blue']
+colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'white', 'black']
 
 plt.figure(figsize=(10, 10))
 plt.imshow(map_img, origin='upper',extent=[0, 4200, 4200, 0])
@@ -33,7 +33,7 @@ i = 0
 for file in trace_files:
     df = pd.read_csv(file)
     if 'kart1_X' in df.columns and 'kart1_Y' in df.columns:
-        plt.plot(df['kart1_X'], df['kart1_Y'], color=colors[i], linewidth=3, label=os.path.basename(file))
+        plt.plot(df['kart1_X'], df['kart1_Y'], color=colors[i], linewidth=3, label=os.path.basename(file), alpha=0.5)
     else:
         print(f"Warning: {file} missing 'kart1_X' or 'kart1_Y' columns. Skipping.")
     i += 1

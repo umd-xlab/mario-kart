@@ -17,7 +17,7 @@ import glob
 import csv
 import retro
 from stable_baselines3 import PPO
-from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, VecTransposeImage
+from stable_baselines3.common.vec_env import DummyVecEnv, VecFrameStack, VecTransposeImage, SubprocVecEnv
 from stable_baselines3.common.atari_wrappers import ClipRewardEnv, WarpFrame, StickyActionEnv
 from env_utils import make_retro
 
@@ -74,27 +74,33 @@ def pick_model_folder(base_dir="../../OUTPUT"):
 
 def main():
     parser = argparse.ArgumentParser(description="Play model with trace logging")
-    parser.add_argument("--model", default='latest', help="Path to trained model")
+    parser.add_argument("--model", default='pick', help="Path to trained model")
     parser.add_argument("--game", default="SuperMarioKart-Snes")
     parser.add_argument("--state", default=retro.State.DEFAULT)
     parser.add_argument("--scenario", default=None)
-    parser.add_argument("--num_traces", default=1, type=int, help="How many traces do you want to make?")
+    parser.add_argument("--num_traces", default=9, type=int, help="How many traces do you want to make?")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for numpy, torch, and random.")
     args = parser.parse_args()
 
 
-    # Create environment
-    def make_env():
-        env = make_retro(game=args.game, state=args.state, scenario=args.scenario, num_players=1)
-        env.action_space.seed(args.seed)
-        #env= StickyActionEnv(env)
-        env = WarpFrame(env)
-        env = ClipRewardEnv(env)
-        return env
+    def make_env(rank, base_seed=0):
+        def _init():
+            env = make_retro(game=args.game, state=args.state, scenario=args.scenario, num_players=1)
+            env.action_space.seed(base_seed + rank)
+            env = WarpFrame(env)
+            env = ClipRewardEnv(env)
+            return env
+        return _init
+
     
-    env = DummyVecEnv([make_env])
-    env.seed(args.seed)
+    #env = DummyVecEnv([make_env])
+    #env.seed(args.seed)
+    #env = SubprocVecEnv([make_env(i, base_seed=args.seed) for i in range(4)])
+    #env = VecTransposeImage(VecFrameStack(env, n_stack=4))
+
+    env = SubprocVecEnv([make_env(i, base_seed=args.seed) for i in range(args.num_traces)])
     env = VecTransposeImage(VecFrameStack(env, n_stack=4))
+
 
     if args.model == "pick":
         folder = pick_model_folder()
@@ -115,16 +121,19 @@ def main():
         np.random.seed(trace_seed)
         torch.manual_seed(trace_seed)
 
-        # Reset environment for each trace
-        obs = env.reset()
-        total_reward = 0
-        done = [False]
+    # Reset environment for each trace
+    obs = env.reset()
+    total_reward = 0
+    done = [False]
+    state=env.reset()
+    step = 0
 
+    while True:
         # Prepare unique output folders/files for each trace for only 1 iteration
-        if (trace_idx == 0):
-            # Prepare video folder
-            frames_dir = os.path.join(output_dir, "frames")
-            os.makedirs(frames_dir, exist_ok=True)
+        #if (trace_idx == 0):
+        # Prepare video folder
+        frames_dir = os.path.join(output_dir, "frames")
+        os.makedirs(frames_dir, exist_ok=True)
     
         # Prepare CSV
         csv_filename = f"playback_trace{trace_idx:02d}.csv"
@@ -137,19 +146,23 @@ def main():
             writer.writerow(headers)
         
             # Run simulation
-            #obs = env.reset()
-            #total_reward = 0
+            obs = env.reset()
+            total_reward = 0
             step = 0
             #done = [False]
         
             while not done[0]:# and step < 1000:
-                if (trace_idx == 0):
-                    frame = env.render(mode='rgb_array') # This grabs the frame in RGB (x,y,3)
-                    imageio.imwrite(os.path.join(frames_dir, f"frame_{step:05d}.png"), frame)
+                #if (trace_idx == 0):
+                frame = env.render(mode='rgb_array') # This grabs the frame in RGB (x,y,3)
+                imageio.imwrite(os.path.join(frames_dir, f"frame_{step:05d}.png"), frame)
 
-                if (trace_idx == args.num_traces -1):
-                    env.render(mode='human') # Viewable screen for us to watch a playback
-                action, _ = model.predict(obs, deterministic=False)#True)
+                #if (trace_idx == args.num_traces -1):
+                env.render(mode='human') # Viewable screen for us to watch a playback
+                action, _ = model.predict(obs, deterministic=False)
+                #if (args.num_traces == 1): # If we only want 1 trace, we likely want it to be deterministic=True
+                #    action, _ = model.predict(obs, deterministic=True)
+                #else:
+                #    action, _ = model.predict(obs, deterministic=False) # Otherwise, make it false
                 obs, rewards, done, infos = env.step(action)
                 total_reward += rewards[0]
             
@@ -171,5 +184,10 @@ def main():
                 writer.writerow(data)
                 step += 1
 
+
+
+
 if __name__ == "__main__":
     main()
+
+

@@ -12,6 +12,7 @@ import argparse
 from common import get_model_file_name, com_print, init_logger, create_output_dir
 from models_utils import init_model
 from env_utils import init_env
+from callbacks import SaveOnBestTrainingRewardCallbackCustom
 
 import csv
 import os
@@ -91,10 +92,12 @@ class ModelTrainer:
     def train(self):
         com_print('========= Start Training ==========')
 
+        callback = SaveOnBestTrainingRewardCallbackCustom(check_freq=200, log_dir=self.output_fullpath)
+
         if self.args.alg == 'es':
             self.p1_model.train(num_generations=500)
         else:
-            self.p1_model.learn(total_timesteps=self.args.num_timesteps)
+            self.p1_model.learn(total_timesteps=self.args.num_timesteps, callback=callback)
 
         com_print('========= End Training ==========')
 
@@ -108,7 +111,6 @@ class ModelTrainer:
         Copies over the current reward script into the newly created model folder. Yay, automation!
         """
         reward_script_path = os.path.expanduser("~") + "/mario-kart/stable-retro/retro/data/stable/SuperMarioKart-Snes/script.lua"
-        print(self.output_fullpath, "bloooooop")
         shutil.copy(reward_script_path, self.output_fullpath)
         return
 

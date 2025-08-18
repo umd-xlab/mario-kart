@@ -78,7 +78,7 @@ def main():
     parser.add_argument("--game", default="SuperMarioKart-Snes")
     parser.add_argument("--state", default=retro.State.DEFAULT)
     parser.add_argument("--scenario", default=None)
-    parser.add_argument("--num_traces", default=9, type=int, help="How many traces do you want to make?")
+    parser.add_argument("--num_traces", default=1, type=int, help="How many traces do you want to make?")
     parser.add_argument("--seed", type=int, default=0, help="Random seed for numpy, torch, and random.")
     args = parser.parse_args()
 
@@ -128,61 +128,59 @@ def main():
     state=env.reset()
     step = 0
 
-    while True:
-        # Prepare unique output folders/files for each trace for only 1 iteration
-        #if (trace_idx == 0):
-        # Prepare video folder
-        frames_dir = os.path.join(output_dir, "frames")
-        os.makedirs(frames_dir, exist_ok=True)
-    
-        # Prepare CSV
-        csv_filename = f"playback_trace{trace_idx:02d}.csv"
-        csv_path = os.path.join(output_dir, csv_filename)
-        with open(csv_path, 'w', newline='') as csvfile:
-            writer = csv.writer(csvfile)
-            headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed",
-                       "DrivingMode", "GameMode", "getFrame", "current_checkpoint",
-                       "surface", "reward", "total_reward"]
-            writer.writerow(headers)
-        
-            # Run simulation
-            obs = env.reset()
-            total_reward = 0
-            step = 0
-            #done = [False]
-        
-            while not done[0]:# and step < 1000:
-                #if (trace_idx == 0):
-                frame = env.render(mode='rgb_array') # This grabs the frame in RGB (x,y,3)
-                imageio.imwrite(os.path.join(frames_dir, f"frame_{step:05d}.png"), frame)
+    # Prepare unique output folders/files for each trace for only 1 iteration
+    #if (trace_idx == 0):
+    # Prepare video folder
+    frames_dir = os.path.join(output_dir, "frames")
+    os.makedirs(frames_dir, exist_ok=True)
 
-                #if (trace_idx == args.num_traces -1):
+    # Prepare CSV
+    csv_filename = f"playback_trace{trace_idx:02d}.csv"
+    csv_path = os.path.join(output_dir, csv_filename)
+    with open(csv_path, 'w', newline='') as csvfile:
+        writer = csv.writer(csvfile)
+        headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed",
+                    "DrivingMode", "GameMode", "getFrame", "current_checkpoint",
+                    "surface", "reward", "total_reward"]
+        writer.writerow(headers)
+    
+        # Run simulation
+        obs = env.reset()
+        total_reward = 0
+        step = 0
+        #done = [False]
+    
+        while not done[0]:# and step < 1000:
+            #if (trace_idx == 0):
+            frame = env.render(mode='rgb_array') # This grabs the frame in RGB (x,y,3)
+            imageio.imwrite(os.path.join(frames_dir, f"frame_{step:05d}.png"), frame)
+
+            if (trace_idx == args.num_traces -1):
                 env.render(mode='human') # Viewable screen for us to watch a playback
-                action, _ = model.predict(obs, deterministic=False)
-                #if (args.num_traces == 1): # If we only want 1 trace, we likely want it to be deterministic=True
-                #    action, _ = model.predict(obs, deterministic=True)
-                #else:
-                #    action, _ = model.predict(obs, deterministic=False) # Otherwise, make it false
-                obs, rewards, done, infos = env.step(action)
-                total_reward += rewards[0]
-            
-                # Write trace data
-                info = infos[0]
-                data = [step,
-                        info.get("kart1_X", 0),
-                        info.get("kart1_Y", 0),
-                        info.get("kart1_direction", 0),
-                        info.get("kart1_speed", 0),
-                        info.get("DrivingMode", 0),
-                        info.get("GameMode", 0),
-                        info.get("getFrame", 0),
-                        info.get("current_checkpoint", 0),
-                        info.get("surface", 0),
-                        rewards[0],
-                        total_reward
-                    ]
-                writer.writerow(data)
-                step += 1
+            if (args.num_traces == 1): # If we only want 1 trace, we likely want it to be deterministic=True
+                action, _ = model.predict(obs, deterministic=True)
+            else:
+                action, _ = model.predict(obs, deterministic=False) # Otherwise, make it false
+            obs, rewards, done, infos = env.step(action)
+            total_reward += rewards[0]
+        
+            # Write trace data
+            info = infos[0]
+            data = [step,
+                    info.get("kart1_X", 0),
+                    info.get("kart1_Y", 0),
+                    info.get("kart1_direction", 0),
+                    info.get("kart1_speed", 0),
+                    info.get("DrivingMode", 0),
+                    info.get("GameMode", 0),
+                    info.get("getFrame", 0),
+                    info.get("current_checkpoint", 0),
+                    info.get("surface", 0),
+                    rewards[0],
+                    total_reward
+                ]
+            writer.writerow(data)
+            step += 1
 
 
 

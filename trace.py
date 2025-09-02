@@ -52,8 +52,10 @@ def find_latest_model(base_dir="../../OUTPUT"):
 
     # Model file has the same name as the folder, with .zip extension
     folder_name = os.path.basename(latest_folder)
-    model_zip = find_zip_in_folder(latest_folder)
-    model_path = os.path.join(latest_folder, model_zip)
+    #model_zip = find_zip_in_folder(latest_folder)
+    model_path = find_zip_in_folder(latest_folder)
+    print(model_path, 'this is it')
+    #model_path = os.path.join(latest_folder, model_zip)
     if not os.path.isfile(model_path):
         raise FileNotFoundError(f"Model file {model_path} not found in latest folder.")
     return model_path
@@ -121,66 +123,63 @@ def main():
         np.random.seed(trace_seed)
         torch.manual_seed(trace_seed)
 
-    # Reset environment for each trace
-    obs = env.reset()
-    total_reward = 0
-    done = [False]
-    state=env.reset()
-    step = 0
-
-    # Prepare unique output folders/files for each trace for only 1 iteration
-    #if (trace_idx == 0):
-    # Prepare video folder
-    frames_dir = os.path.join(output_dir, "frames")
-    os.makedirs(frames_dir, exist_ok=True)
-
-    # Prepare CSV
-    csv_filename = f"playback_trace{trace_idx:02d}.csv"
-    csv_path = os.path.join(output_dir, csv_filename)
-    with open(csv_path, 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed",
-                    "DrivingMode", "GameMode", "getFrame", "current_checkpoint",
-                    "surface", "reward", "total_reward"]
-        writer.writerow(headers)
-    
-        # Run simulation
+        # Reset environment for each trace
         obs = env.reset()
         total_reward = 0
+        done = [False]
+        state=env.reset()
         step = 0
-        #done = [False]
-    
-        while not done[0]:# and step < 1000:
-            #if (trace_idx == 0):
-            frame = env.render(mode='rgb_array') # This grabs the frame in RGB (x,y,3)
-            imageio.imwrite(os.path.join(frames_dir, f"frame_{step:05d}.png"), frame)
 
-            if (trace_idx == args.num_traces -1):
-                env.render(mode='human') # Viewable screen for us to watch a playback
-            if (args.num_traces == 1): # If we only want 1 trace, we likely want it to be deterministic=True
-                action, _ = model.predict(obs, deterministic=True)
-            else:
-                action, _ = model.predict(obs, deterministic=False) # Otherwise, make it false
+        # Prepare unique output folders/files for each trace for only 1 iteration
+        #if (trace_idx == 0):
+        # Prepare video folder
+        #frames_dir = os.path.join(output_dir, "frames")
+        #os.makedirs(frames_dir, exist_ok=True)
+
+        # Prepare CSV
+        # initialize CSV writers once
+        headers = ["step", "kart1_X", "kart1_Y", "kart1_direction", "kart1_speed", "DrivingMode", "GameMode", "getFrame", "current_checkpoint", "surface", "reward", "total_reward"]
+        csv_files = []
+        writers = []
+        for trace_idx in range(args.num_traces):
+            csv_filename = f"playback_trace{trace_idx:02d}.csv"
+            csv_path = os.path.join(output_dir, csv_filename)
+            csvfile = open(csv_path, 'w', newline='')
+            writer = csv.writer(csvfile)
+            writer.writerow(headers)
+            csv_files.append(csvfile)
+            writers.append(writer)
+
+        obs = env.reset()
+        done = [False] * args.num_traces
+        total_rewards = [0] * args.num_traces
+        step = 0
+
+        while not all(done):
+            action, _ = model.predict(obs, deterministic=False)
             obs, rewards, done, infos = env.step(action)
-            total_reward += rewards[0]
-        
-            # Write trace data
-            info = infos[0]
-            data = [step,
-                    info.get("kart1_X", 0),
-                    info.get("kart1_Y", 0),
-                    info.get("kart1_direction", 0),
-                    info.get("kart1_speed", 0),
-                    info.get("DrivingMode", 0),
-                    info.get("GameMode", 0),
-                    info.get("getFrame", 0),
-                    info.get("current_checkpoint", 0),
-                    info.get("surface", 0),
-                    rewards[0],
-                    total_reward
-                ]
-            writer.writerow(data)
+            for i in range(args.num_traces):
+                if not done[i]:  # still alive
+                    total_rewards[i] += rewards[i]
+                    data = [step,
+                            infos[i].get("kart1_X", 0),
+                            infos[i].get("kart1_Y", 0),
+                            infos[i].get("kart1_direction", 0),
+                            infos[i].get("kart1_speed", 0),
+                            infos[i].get("DrivingMode", 0),
+                            infos[i].get("GameMode", 0),
+                            infos[i].get("getFrame", 0),
+                            infos[i].get("current_checkpoint", 0),
+                            infos[i].get("surface", 0),
+                            rewards[i],
+                            total_rewards[i]]
+                    writers[i].writerow(data)
             step += 1
+
+        # cleanup
+        for f in csv_files:
+            f.close()
+
 
 
 

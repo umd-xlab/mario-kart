@@ -19,6 +19,8 @@ root = tk.Tk()
 root.withdraw()  # Hide the main window
 folder_path= filedialog.askdirectory(initialdir="/home/kvsakano/mario-kart/OUTPUT", title="Select folder containing playback_trace CSVs")
 root.destroy()
+filename = os.path.splitext(os.path.basename(folder_path))[0]
+
 
 trace_files = sorted(glob.glob(os.path.join(folder_path, "playback_trace*.csv")))
 if not trace_files:
@@ -39,6 +41,6 @@ for file in trace_files:
     i += 1
 
 plt.legend()
-plt.title("Mario Trace Overlay on Track Map")
+plt.title("Mario Trace Overlay on Track Map using model " + filename)
 plt.axis('off')  # Turn off pixel axis for clean visuals
 plt.show()

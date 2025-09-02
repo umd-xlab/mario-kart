@@ -27,7 +27,8 @@ if not trace_files:
     print("No matching files found.")
     exit()
 
-colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'white', 'black']
+#colors = ['red', 'orange', 'yellow', 'green', 'blue', 'purple', 'pink', 'white', 'black']
+colormap = plt.get_cmap('tab20')
 
 plt.figure(figsize=(10, 10))
 plt.imshow(map_img, origin='upper',extent=[0, 4200, 4200, 0])
@@ -35,12 +36,13 @@ i = 0
 for file in trace_files:
     df = pd.read_csv(file)
     if 'kart1_X' in df.columns and 'kart1_Y' in df.columns:
-        plt.plot(df['kart1_X'], df['kart1_Y'], color=colors[i], linewidth=3, label=os.path.basename(file), alpha=0.5)
+        color = colormap(i % colormap.N)
+        plt.plot(df['kart1_X'], df['kart1_Y'], color=color, linewidth=3, label=os.path.basename(file), alpha=0.5)
     else:
         print(f"Warning: {file} missing 'kart1_X' or 'kart1_Y' columns. Skipping.")
     i += 1
 
-plt.legend()
+#plt.legend()
 plt.title("Mario Trace Overlay on Track Map using model " + filename)
 plt.axis('off')  # Turn off pixel axis for clean visuals
 plt.show()
